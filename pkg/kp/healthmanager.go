@@ -230,9 +230,14 @@ func processHealthUpdater(
 			write = nil
 			if result.OK {
 				remoteHealth = result.Health
+				healthLogger := logger.SubLogger(logrus.Fields{
+					"pod":     result.Health.Id,
+					"service": result.Health.Service,
+				})
+				healthLogger.NoFields().Warningf("Service %s is now %s", result.Health.Status, result.Health.Service)
 				if result.Throttle && throttle == nil {
 					throttle = time.After(time.Duration(*HealthResumeLimit) * bucketRefreshRate)
-					logger.NoFields().Warning("health is flapping; throttling updates")
+					healthLogger.NoFields().Warningf("Service %s health is flapping; throttling updates", result.Health.Service)
 				}
 			}
 		case <-throttle:
